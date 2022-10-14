@@ -24,6 +24,7 @@
 + Produce a QR from a read file
 + Read a QR and produce a file
 - Loop
+- Fix deploy (index in target from public, npm installs from clean slate)
 - Work on performance
 - Prettify
 - deps.edn instead of npm?
