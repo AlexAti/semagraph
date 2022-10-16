@@ -1,5 +1,6 @@
 (ns app.main
-  (:require [reagent.core :as r]
+  (:require [cljs.pprint :refer [pprint]]
+            [reagent.core :as r]
             [reagent.dom :as rd]
             [qrcode :as qr]
             ["@zxing/library" :as zx]))
@@ -74,7 +75,7 @@
   [:div
    [:div
     [:h5 "Status"]
-    [:p (with-out-str (cljs.pprint/pprint @status))]]
+    [:p (with-out-str (pprint @status))]]
    [:div
     [:h5 "Log"]
     (into [:div]
