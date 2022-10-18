@@ -9,7 +9,7 @@
 
 (defonce status (r/atom {:download-link-href "#"
                          :log []
-                         :mode :send
+                         :mode :receive
                          :n 0}))
 
 
@@ -41,7 +41,7 @@
 (defn forget-file-button []
   [:button {:on-click #(do (.stopPropagation %)
                            (.preventDefault %)
-                           (swap! status assoc :n 0)
+                           (swap! status assoc :n 0 :mode :receive)
                            (swap! status dissoc :uploadeable-content :qrtext)
                            false)}
    "Cancel file upload"])
@@ -109,12 +109,17 @@
                     (concat byterange [[(- bytes (mod bytes (dec chunksize))) bytes]]))]
     (map conj byterange (map next-n (range)))))
 
+(defn as-binary-array [n]
+  (let [a (js/window.Uint8Array. 1)]
+    (aset a 0 n)
+    a))
+
 (defn parse-file [blob]
   (-> (.arrayBuffer blob) ; for big files we can convert to a stream instead
       (.then #(do (let [plan (-plan-slices (.-size blob) 1000)
                         b (.-Blob js/window)
                         chunk-blobs (map (fn [[s e n]]
-                                           (b. [(array (if (= e (.-size blob)) 0 n))
+                                           (b. [(as-binary-array (if (= e (.-size blob)) 0 n))
                                                 (.slice blob s e)]
                                                (clj->js {:type (.-type blob)})))
                                          plan)
@@ -154,6 +159,7 @@
 (declare enable-file-download)
 (defn receive-new-chunk [res]
   (log (.-text res))
+  (println "The first byte is " (first (.-rawBytes res)) "and n is " (:n @status))
   (let [chunk-n (first (.-rawBytes res))
         res (rest (.-rawBytes res))]
     ;; Only for first chunk received
@@ -181,7 +187,7 @@
         codeReader (codeReader.)
         _ (-> (.getVideoInputDevices codeReader)
               (.then (fn [devs]
-                       (swap! status update :device (.-deviceId (first devs))))))
+                       (swap! status assoc :device (.-deviceId (first devs))))))
         _ (.decodeFromInputVideoDeviceContinuously codeReader
                                                    (:device @status)
                                                    "preview"
